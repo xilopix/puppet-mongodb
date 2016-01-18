@@ -6,6 +6,11 @@ class mongodb::install (
   $package_version = undef
 ) {
 
+    # define ordering
+    Class['mongodb::repos::apt']
+    -> Class['apt::update']
+    -> Package<| title == 'mongodb-org' |>
+
     anchor { 'mongodb::install::begin': }
     anchor { 'mongodb::install::end': }
 
