@@ -13,7 +13,12 @@ class mongodb (
   $ulimit_nproc             = $mongodb::params::ulimit_nproc,
   $run_as_user              = $mongodb::params::run_as_user,
   $run_as_group             = $mongodb::params::run_as_group,
-  $old_servicename          = $mongodb::params::old_servicename
+  $old_servicename          = $mongodb::params::old_servicename,
+
+  ### START Hiera Lookups ###
+  $mongod = {},
+  $mongos = {}
+  ### END Hiera Lookups ###
 ) inherits mongodb::params {
 
   anchor { 'mongodb::begin': before => Anchor['mongodb::install::begin'], }
@@ -77,7 +82,13 @@ class mongodb (
       value => $::mongodb::ulimit_nproc;
   }
 
+  # handle resources for hiera
+
+  create_resources('mongodb::mongod', $mongod)
+  create_resources('mongodb::mongos', $mongos)
+
   # ordering resources application
 
   Mongod<| |> -> Mongos<| |>
+
 }
