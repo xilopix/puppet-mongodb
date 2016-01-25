@@ -1,6 +1,8 @@
 #! /usr/bin/ruby
 
 Puppet::Type.newtype(:start_detector) do
+  ensurable
+
   @doc = %q{Wait while sending queries to every
     servers defined in recipe until all (or at
     least one of them) send an answer
@@ -16,7 +18,6 @@ Puppet::Type.newtype(:start_detector) do
       - one : one of them is sufficient
 
     Example:
-
       start_detector { 'servers_to_join':
         timeout => 120
         config_servers => [
@@ -26,9 +27,7 @@ Puppet::Type.newtype(:start_detector) do
         ],
         policy => all
       }
-  }
-
-  ensurable
+    }
 
   newparam(:name, :namevar => true) do
     validate do |value|

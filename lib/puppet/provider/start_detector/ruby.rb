@@ -22,7 +22,7 @@ Puppet::Type.type(:start_detector).provide(:ruby) do
   # test mandatory servers connectivity
   #
   def create
-    debug = false
+    debug = true
     servers = resource[:servers]
 
     # if array has a single element, its strangely becomes a string
@@ -54,7 +54,7 @@ Puppet::Type.type(:start_detector).provide(:ruby) do
             return true
           end
         rescue Errno::ECONNREFUSED, Errno::EHOSTUNREACH
-
+          # Do nothing more
         end
       end
       sleep 1
