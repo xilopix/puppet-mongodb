@@ -37,10 +37,10 @@ define mongodb::mongos (
   # wait for servers starting
 
   start_detector { 'configservers':
-    ensure  => present,
-    timeout => 120,
+    ensure => present,
+    timeout => 300,
     servers => $mongos_configServers,
-    policy  => one
+    policy => all
   }
 
   if ($mongos_useauth != false) {
