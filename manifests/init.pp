@@ -16,8 +16,10 @@ class mongodb (
   $old_servicename          = $mongodb::params::old_servicename,
 
   ### START Hiera Lookups ###
-  $mongod = {},
-  $mongos = {}
+  $mongod     = hiera_hash('mongodb::mongod', {}),
+  $mongos     = hiera_hash('mongodb::mongos', {}),
+  $replicaset = hiera_hash('mongodb::cluster::replicaset', {}),
+  $shard      = hiera_hash('mongodb::cluster::shard', {}),
   ### END Hiera Lookups ###
 ) inherits mongodb::params {
 
@@ -86,9 +88,13 @@ class mongodb (
 
   create_resources('mongodb::mongod', $mongod)
   create_resources('mongodb::mongos', $mongos)
+  create_resources('mongodb::cluster::replicaset', $replicaset)
+  create_resources('mongodb::cluster::shard', $shard)
 
   # ordering resources application
 
-  Mongod<| |> -> Mongos<| |>
-
+  Mongod<| |>
+  -> Mongos<| |>
+  -> Cluster::Replicaset<| |>
+  -> Cluster::Shard<| |>
 }
