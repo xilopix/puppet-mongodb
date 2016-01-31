@@ -30,7 +30,7 @@ Puppet::Type.newtype(:shard) do
     end
   end
 
-  newparam(:replica) do
+  newparam(:replicaset) do
     validate do |value|
       unless value =~ /^\w+/
         raise ArgumentError, "%s should be a string" % value

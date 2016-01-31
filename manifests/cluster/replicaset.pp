@@ -3,7 +3,6 @@ define mongodb::cluster::replicaset (
   $replicaset_name        = $name,
   $replicaset_master_port = undef,
   $replicaset_slaves      = [],
-  $replicaset_router      = undef,
 ) {
   # basic type validation
 
@@ -15,7 +14,7 @@ define mongodb::cluster::replicaset (
   $replicaset_master = "${::fqdn}:${replicaset_master_port}"
   $replica_server_set = flatten([$replicaset_master, $replicaset_slaves])
 
-  # wait for shard servers starting
+  # wait for replication servers starting
 
   start_detector { "${replicaset_name}_servers_detection":
     ensure => present,
@@ -25,9 +24,9 @@ define mongodb::cluster::replicaset (
   }
 
   replicaset { "$replicaset_name":
-    ensure => present,
-    router => $replicaset_router,
-    members => $replica_server_set,
-    require => Start_detector["${replicaset_name}_servers_detection"]
+    ensure      => present,
+    master_port => $replicaset_master_port,
+    members     => $replica_server_set,
+    require     => Start_detector["${replicaset_name}_servers_detection"]
   }
 }

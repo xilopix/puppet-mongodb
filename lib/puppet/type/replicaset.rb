@@ -22,19 +22,12 @@ Puppet::Type.newtype(:replicaset) do
     }
 
   newparam(:name, :namevar => true) do
-    validate do |value|
-      unless value =~ /^\w+/
-        raise ArgumentError, "%s should be a string" % value
-      end
-    end
+    newvalues(/^\w+$/)
+
   end
 
-  newparam(:router) do
-    validate do |value|
-      unless value =~ /[\w\-\.]+:\d+/
-        raise ArgumentError, "%s should respect pattern hostname:port" % value
-      end
-    end
+  newparam(:master_port) do
+    newvalues(/^\d+$/)
   end
 
   newparam(:members, :array_matching => :all) do

@@ -18,9 +18,9 @@ define mongodb::cluster::shard (
   }
 
   shard { "${shard_name}_setup":
-    ensure => present,
-    replica => $shard_replset,
-    members => $shard_nodes,
-    require => Start_detector["${shard_name}_servers_detection"]
+    ensure     => present,
+    replicaset => $shard_replset,
+    members    => $shard_nodes,
+    require    => Start_detector["${shard_name}_servers_detection"]
   }
 }

@@ -1,0 +1,57 @@
+
+
+
+cluster mongo sur : mongo-01.xilopix.net, mongo-02.xilopix.net, mongo-03.xilopix.net
+machine NUMA, donc ajouter [numactl --interleave=all]
+créer /mnt/data/db0 /mnt/data/db1 /mnt/data/configdb /mnt/data/logdb
+
+mongo-01.xilopix.net, mongo-02.xilopix.net, mongo-03.xilopix.net
+numactl --interleave=all mongod --replSet "rs0" --dbpath /mnt/data/db0 --port 27020
+#préciser un nouveau port pour ne pas prendre le port 27017 par défaut de mongos
+
+
+mongo mongo-01.xilopix.net:27020
+rs.initiate()
+rs.add("mongo-02.xilopix.net:27020")
+rs.add("mongo-03.xilopix.net:27020")
+
+
+
+
+[remplir la base de données sur 10.3.0.12:27020]
+
+mongo-01.xilopix.net, mongo-02.xilopix.net, mongo-03.xilopix.net
+numactl --interleave=all mongod --configsvr --dbpath /mnt/data/configdb --port 27019
+
+mongo-01.xilopix.net, mongo-02.xilopix.net, mongo-03.xilopix.net
+mongos --configdb mongo-01.xilopix.net:27019,mongo-02.xilopix.net:27019,mongo-03.xilopix.net:27019
+#mongos communique avec le port 27017 par défaut
+
+mongo mongo-01.xilopix.net:27017/admin
+sh.addShard( "rs0/mongo-01.xilopix.net:27020,mongo-02.xilopix.net:27020,mongo-03.xilopix.net:27020" )
+
+mongo-01.xilopix.net, mongo-02.xilopix.net, mongo-03.xilopix.net
+numactl --interleave=all mongod --replSet "rs1" --dbpath /mnt/data/db1 --port 27021
+#préciser un nouveau port pour ne pas prendre le port 27017 par défaut de mongos ou celui de l'autre shard 27020
+
+mongo mongo-02.xilopix.net:27021
+rs.initiate()
+rs.add("mongo-01.xilopix.net:27021")
+rs.add("mongo-03.xilopix.net:27021")
+
+mongo mongo-01.xilopix.net:27017/admin --eval 'sh.addShard( "rs0/mongo-01.xilopix.net:27020,mongo-02.xilopix.net:27020,mongo-03.xilopix.net:27020" )'
+mongo mongo-01.xilopix.net:27017/admin --eval 'sh.addShard( "rs1/mongo-01.xilopix.net:27021,mongo-02.xilopix.net:27021,mongo-03.xilopix.net:27021" )'
+
+# idem
+mongo mongo-01.xilopix.net:27017/admin
+
+sh.enableSharding( "DATABASE" )
+use DATABASE
+db.COLLECTION.createIndex( { SHARD_KEY : 1 } )
+sh.shardCollection( "DATABASE.COLLECTION", { "SHARD_KEY" : 1 } )
+
+#######################################################
+
+use DATABASE
+db.stats()
+db.printShardingStatus()
