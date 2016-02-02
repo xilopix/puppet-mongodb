@@ -10,10 +10,7 @@ define mongodb::mongos (
   $mongos_logappend        = true,
   $mongos_fork             = true,
   $mongos_useauth          = false,
-<<<<<<< HEAD
   $mongos_starttime        = 1,
-=======
->>>>>>> add systemd handlers
   $mongos_add_options      = []
 ) {
 
@@ -81,8 +78,8 @@ define mongodb::mongos (
       require    => [
         File["/etc/mongos_${mongos_instance}.conf"],
         File["/etc/init.d/mongos_${mongos_instance}"],
-        Service[$::mongodb::old_servicename],
-        Start_detector['configservers']
+        Start_detector['configservers'],
+        Service[$::mongodb::old_servicename]
       ]
     }
   }
