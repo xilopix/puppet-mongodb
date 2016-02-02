@@ -18,7 +18,7 @@ define mongodb::cluster::replicaset (
 
   start_detector { "${replicaset_name}_servers_detection":
     ensure => present,
-    timeout => 120,
+    timeout => 300,
     servers => $replica_server_set,
     policy => all
   }
