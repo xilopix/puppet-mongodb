@@ -2,8 +2,9 @@
 
 Puppet::Type.type(:shard).provide(:ruby) do
   commands :mongo => '/usr/bin/mongo'
+
   #
-  #
+  # test shard existence
   #
   def exists?
     output = mongo_command('sh.status()', "#{resource[:router]}")
@@ -31,22 +32,31 @@ Puppet::Type.type(:shard).provide(:ruby) do
   end
 
   #
-  #
+  # the shards won't be deleted through puppet
   #
   def destroy
     true
   end
 
   #
-  #
+  # add shards
   #
   def create
-    output = mongo_command('sh.status()', "#{resource[:router]}")
-    Puppet.debug("custom-debug - hey")
+    begin
+      nodes_str = resource[:nodes].join(",")
+      command = "sh.addShard(\"#{resource[:replicaset]}/#{nodes_str}\")"
+      result = mongo_command(command, "#{resource[:router]}")
+
+      if (!result['shardAdded'].eql? resource[:replicaset]) or (result['ok'] != 1)
+        raise Puppet::Error, "The shard creation failed"
+      end
+    rescue Puppet::ExecutionFailure => e
+      Puppet.warning "Got an exception: #{e}"
+    end
   end
 
   #
-  #
+  # command wrapper
   #
   def mongo_command(command, host, retries=4)
     self.class.mongo_command(command,host,retries)
@@ -134,13 +144,19 @@ Puppet::Type.type(:shard).provide(:ruby) do
       final_stream << ' ] }'
 
       output = final_stream.join("\n")
+    elsif command =~ /sh\.addShard.*/
+      output.gsub!(/ => /, ':')
     end
+
     #Hack to avoid non-json empty sets
     output = "{}" if output == "null\n"
     output.gsub!(/\s*/, '')
 
     match = /(balancer:.*)"databases":/.match(output)
-    output.sub!($1, '],')
-    JSON.parse(output)
+    if !$1.nil?
+      output.sub!($1, '],')
+    end
+
+    return JSON.parse(output)
   end
 end
