@@ -9,12 +9,17 @@ define mongodb::cluster::replicaset (
   validate_numeric($replicaset_master_port)
   validate_array($replicaset_slaves)
 
+  # server set definition
+
+  $replicaset_master = "${::fqdn}:${replicaset_master_port}"
+  $replica_server_set = flatten([$replicaset_master, $replicaset_slaves])
+
   # wait for replication servers starting
 
   start_detector { "${replicaset_name}_servers_detection":
     ensure => present,
     timeout => 300,
-    servers => $replicaset_slaves,
+    servers => $replica_server_set,
     policy => all
   }
 
