@@ -38,7 +38,15 @@ Puppet::Type.newtype(:shard) do
     end
   end
 
-  newparam(:members, :array_matching => :all) do
+  newparam(:router) do
+    validate do |value|
+      unless value =~ /[\w\-\.]+:\d+/
+        raise ArgumentError, "%s should respect pattern hostname:port" % value
+      end
+    end
+  end
+
+  newparam(:nodes, :array_matching => :all) do
     validate do |values|
       Array(values).each do |value|
         unless value =~ /[\w\-\.]+:\d+,*/
