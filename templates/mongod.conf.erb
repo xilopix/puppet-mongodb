@@ -27,6 +27,9 @@ auth=<%= @mongod_auth %>
 <%- if @mongod_useauth != false -%>
 keyFile = /etc/mongod_<%= @mongod_instance %>.key
 <%- end -%>
+<%- if @mongod_engine != "" -%>
+engine=<%= @mongod_engine %>
+<%- end -%>
 <%- @mongod_add_options.each do |addoption| -%>
 <%= addoption %>
 <%- end -%>
