@@ -13,9 +13,17 @@ define mongodb::cluster::shard (
 
   start_detector { "${shard_name}_servers_detection":
     ensure  => present,
-    timeout => 120,
+    timeout => 300,
     servers => $shard_nodes,
     policy  => all
+  }
+
+  start_detector { "${shard_name}_router_detection":
+    ensure  => present,
+    timeout => 300,
+    servers => $shard_router,
+    policy  => all,
+    require => Start_detector["${shard_name}_servers_detection"]
   }
 
   shard { "${shard_name}_setup":
@@ -23,6 +31,6 @@ define mongodb::cluster::shard (
     replicaset => $shard_replicaset,
     router     => $shard_router,
     nodes      => $shard_nodes,
-    require    => Start_detector["${shard_name}_servers_detection"]
+    require => Start_detector["${shard_name}_router_detection"]
   }
 }
