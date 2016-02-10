@@ -21,9 +21,15 @@ define mongodb::mongod (
 
 # lint:ignore:selector_inside_resource  would not add much to readability
 
+  if (versioncmp($mongodb::package_ensure, '3.0.0') >= 0) {
+    $template_type = 'yaml'
+  } else {
+    $template_type = 'ini'
+  }
+
   file {
     "/etc/mongod_${mongod_instance}.conf":
-      content => template('mongodb/mongod.conf.erb'),
+      content => template("mongodb/mongod_conf/$template_type.conf.erb"),
       mode    => '0755',
       require => Class['mongodb::install'];
     "/etc/init.d/mongod_${mongod_instance}":

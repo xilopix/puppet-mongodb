@@ -56,7 +56,11 @@ NAME=mongodb_<%= @mongod_instance %>
 # Other configuration options are located in $CONF file. See here for more:
 # http://docs.mongodb.org/manual/reference/configuration-options/
 CONF="/etc/mongod_<%= @mongod_instance %>.conf"
+<%- if @template_type == 'yaml' -%>
+DBPATH=`awk -F: '/dbPath:/{print $2}' "$CONF"`
+<%- else -%>
 DBPATH=`awk -F= '/^dbpath=/{print $2}' "$CONF"`
+<%- end -%>
 PIDFILE=<%= scope.lookupvar('mongodb::pidfilepath') %>/mongod_<%= @mongod_instance %>/mongod.pid
 ENABLE_MONGODB=yes
 
