@@ -61,7 +61,9 @@ DBPATH=`awk -F: '/dbPath:/{print $2}' "$CONF"`
 <%- else -%>
 DBPATH=`awk -F= '/^dbpath=/{print $2}' "$CONF"`
 <%- end -%>
-PIDFILE=<%= scope.lookupvar('mongodb::pidfilepath') %>/mongod_<%= @mongod_instance %>/mongod.pid
+
+PIDFILEPATH=<%= scope.lookupvar('mongodb::pidfilepath') %>/mongod_<%= @mongod_instance %>
+PIDFILE=$PIDFILEPATH/mongod.pid
 ENABLE_MONGODB=yes
 
 # Handle NUMA access to CPUs (SERVER-3574)
@@ -125,6 +127,10 @@ running() {
 start_server() {
   mkdir -p $DBPATH || exit 5
   chown -R ${DAEMONUSER}:${DAEMONGROUP} $DBPATH
+
+  mkdir -p $PIDFILEPATH || exit 5
+  chown -R ${DAEMONUSER}:${DAEMONGROUP} $PIDFILEPATH
+
   <% if @mongod_deactivate_transparent_hugepage -%>
   # implement mdiag.sh best-practice
   test -f /sys/kernel/mm/transparent_hugepage/khugepaged/defrag \
