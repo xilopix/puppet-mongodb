@@ -84,6 +84,8 @@ class mongodb (
       value => $::mongodb::ulimit_nproc;
   }
 
+  include mongodb::log
+
   # handle resources for hiera
 
   create_resources('mongodb::mongod', $mongod)

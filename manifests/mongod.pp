@@ -55,13 +55,12 @@ define mongodb::mongod (
     }
   }
 
-    # ensure daemon-reload has been done before service start
+  # ensure daemon-reload has been done before service start
 
-    exec { "systemctl_${mongod_instance}_reload":
-      command => 'systemctl daemon-reload',
-      path    => '/bin',
-      before  => Service["mongod_${mongod_instance}"],
-    }
+  exec { "systemctl_${mongod_instance}_reload":
+    command => 'systemctl daemon-reload',
+    path    => '/bin',
+    before  => Service["mongod_${mongod_instance}"],
   }
 
 # lint:endignore
@@ -95,8 +94,11 @@ define mongodb::mongod (
     require    => [
       File[
         "/etc/mongod_${mongod_instance}.conf",
-        "/etc/init.d/mongod_${mongod_instance}"],
-        Service[$::mongodb::old_servicename]],
+        "/etc/init.d/mongod_${mongod_instance}",
+        "${::mongodb::logdir}"
+      ],
+      Service[$::mongodb::old_servicename]
+    ],
     before     => Anchor['mongodb::end']
   }
 
