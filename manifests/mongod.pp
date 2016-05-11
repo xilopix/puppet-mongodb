@@ -27,15 +27,10 @@ define mongodb::mongod (
     $template_type = 'ini'
   }
 
-  file {
-    "/etc/mongod_${mongod_instance}.conf":
-      content => template("mongodb/mongod_conf/$template_type.conf.erb"),
-      mode    => '0755',
-      require => Class['mongodb::install'];
-    "/etc/init.d/mongod_${mongod_instance}":
-      content => template("mongodb/mongod_init/${::osfamily}/init.conf.erb"),
-      mode    => '0755',
-      require => Class['mongodb::install'];
+  file { "/etc/mongod_${mongod_instance}.conf":
+    content => template("mongodb/mongod_conf/$template_type.conf.erb"),
+    mode    => '0755',
+    require => Class['mongodb::install'];
   }
 
   if ($::osfamily == 'Debian' and $::operatingsystemmajrelease == 8) {
@@ -46,9 +41,19 @@ define mongodb::mongod (
         before  => Exec["systemctl_${mongod_instance}_reload"],
         require => [
           Class['mongodb::install'],
-          File["/etc/init.d/mongod_${mongod_instance}"]
+          File["/etc/mongod_${mongod_instance}.conf"]
       ];
     }
+  } else {
+    file { "/etc/init.d/mongod_${mongod_instance}":
+      content => template("mongodb/mongod_init/${::osfamily}/init.conf.erb"),
+      mode    => '0755',
+      require => [
+        Class['mongodb::install'],
+        File["/etc/mongod_${mongod_instance}.conf"]
+      ]
+    }
+  }
 
     # ensure daemon-reload has been done before service start
 
