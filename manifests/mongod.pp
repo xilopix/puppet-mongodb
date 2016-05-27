@@ -34,7 +34,8 @@ define mongodb::mongod (
   }
 
   if ($::osfamily == 'Debian' and $::operatingsystemmajrelease == 8) {
-    file { "mongod_${mongod_instance}_systemd_service":
+    $init_file_path = "/lib/systemd/system/mongod_${mongod_instance}.service"
+    file { "${init_file_path}":
         path => "/lib/systemd/system/mongod_${mongod_instance}.service",
         content => template("mongodb/mongod_init/${::osfamily}/systemd.conf.erb"),
         mode    => '0644',
@@ -45,7 +46,8 @@ define mongodb::mongod (
       ];
     }
   } else {
-    file { "/etc/init.d/mongod_${mongod_instance}":
+    $init_file_path = "/etc/init.d/mongod_${mongod_instance}"
+    file { "${init_file_path}":
       content => template("mongodb/mongod_init/${::osfamily}/init.conf.erb"),
       mode    => '0755',
       require => [
@@ -85,6 +87,16 @@ define mongodb::mongod (
     }
   }
 
+  file {[
+    "/var/run/mongod_${mongod_instance}",
+    "${::mongodb::dbdir}/mongod_${mongod_instance}",
+  ]:
+    ensure => directory,
+    owner  => $mongodb::params::run_as_user,
+    group  => $mongodb::params::run_as_group,
+    before => [Service["mongod_${mongod_instance}"]]
+  }
+
   service { "mongod_${mongod_instance}":
     ensure     => $mongod_running,
     enable     => $mongod_enable,
@@ -94,8 +106,7 @@ define mongodb::mongod (
     require    => [
       File[
         "/etc/mongod_${mongod_instance}.conf",
-        "/etc/init.d/mongod_${mongod_instance}",
-        "${::mongodb::logdir}"
+        "${init_file_path}"
       ],
       Service[$::mongodb::old_servicename]
     ],

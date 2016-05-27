@@ -49,4 +49,8 @@ class mongodb::install (
         before  => [Anchor['mongodb::install::end']]
     }
 
+    class { 'mongodb::cleanup':
+      require => [Package['mongodb-org']],
+      before  => [Anchor['mongodb::install::end']]
+    }
 }

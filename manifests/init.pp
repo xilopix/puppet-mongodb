@@ -51,17 +51,6 @@ class mongodb (
     before     => Anchor['mongodb::end'],
   }
 
-  # remove not wanted startup script, because it would kill all mongod
-  # instances and not only the default mongod
-
-  file { "/etc/init.d/${::mongodb::old_servicename}":
-    ensure  => file,
-    content => template("${module_name}/replacement_mongod-init.conf.erb"),
-    require => Service[$::mongodb::old_servicename],
-    mode    => '0755',
-    before  => Anchor['mongodb::end'],
-  }
-
   mongodb::limits::conf {
     'mongod-nofile-soft':
       type  => soft,
