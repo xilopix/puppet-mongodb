@@ -7,14 +7,14 @@ Puppet::Type.newtype(:shard) do
     a set of server.
 
     name (string): set the shard name
-    replica (string): replica name (must match the member's mongod config option)
+    replicaset (string): replica name (must match the member's mongod config option)
     members (array): servers to add to the replica as slaves
 
     Example:
       shard { 'shard_name':
-        ensure => present,
-        replica => replica_name,
-        members => [
+        ensure     => present,
+        replicaset => replica_name,
+        members    => [
           'shard_member_1.example.com:24019',
           'shard_member_2.example.com:24019',
           'shard_member_3.example.com:24019',
@@ -24,7 +24,7 @@ Puppet::Type.newtype(:shard) do
 
   newparam(:name, :namevar => true) do
     validate do |value|
-      unless value =~ /^\w+/
+      unless value =~ /^[\w\-\d]+/
         raise ArgumentError, "%s should be a string" % value
       end
     end
@@ -32,7 +32,7 @@ Puppet::Type.newtype(:shard) do
 
   newparam(:replicaset) do
     validate do |value|
-      unless value =~ /^\w+/
+      unless value =~ /^[\w\-\d]+/
         raise ArgumentError, "%s should be a string" % value
       end
     end

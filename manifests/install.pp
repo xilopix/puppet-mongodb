@@ -9,6 +9,7 @@ class mongodb::install (
     # define ordering
     Class['mongodb::repos::apt']
     -> Class['apt::update']
+    -> Package<| title == 'logrotate' |>
     -> Package<| title == 'mongodb-org' |>
 
     anchor { 'mongodb::install::begin': }
@@ -47,10 +48,5 @@ class mongodb::install (
         name    => $::mongodb::repos::apt::package_name,
         require => $mongodb_10gen_package_require,
         before  => [Anchor['mongodb::install::end']]
-    }
-
-    class { 'mongodb::cleanup':
-      require => [Package['mongodb-org']],
-      before  => [Anchor['mongodb::install::end']]
     }
 }

@@ -7,6 +7,7 @@ Puppet::Type.type(:shard).provide(:ruby) do
   # test shard existence
   #
   def exists?
+    debug = true
     output = mongo_command('sh.status()', "#{resource[:router]}")
 
     for i in 0..Integer(output['shards'].length)
@@ -23,6 +24,7 @@ Puppet::Type.type(:shard).provide(:ruby) do
         if nodes.sort != resource[:nodes].sort
           Puppet.warning("custom-debug - Missing nodes into the shard, please add them manually")
         end
+        Puppet.debug("custom-debug - The shard already exists") if debug == true
         return true
         break
       end
@@ -43,11 +45,30 @@ Puppet::Type.type(:shard).provide(:ruby) do
   #
   def create
     begin
+      count = 3
+
       nodes_str = resource[:nodes].join(",")
       command = "sh.addShard(\"#{resource[:replicaset]}/#{nodes_str}\")"
       result = mongo_command(command, "#{resource[:router]}")
 
-      if (!result['shardAdded'].eql? resource[:replicaset]) or (result['ok'] != 1)
+      shard_not_added = ((!result['shardAdded'].eql? resource[:replicaset]) or (result['ok'] != 1))
+
+      while (shard_not_added and (count > 0))
+        count = (count - 1)
+
+        nodes_str = resource[:nodes].join(",")
+        command = "sh.addShard(\"#{resource[:replicaset]}/#{nodes_str}\")"
+        result = mongo_command(command, "#{resource[:router]}")
+        shard_not_added = ((!result['shardAdded'].eql? resource[:replicaset]) or (result['ok'] != 1))
+
+        sleep 5
+
+        if !shard_not_added then
+          return result
+        end
+      end
+
+      if shard_not_added
         raise Puppet::Error, "The shard creation failed"
       end
     rescue Puppet::ExecutionFailure => e
@@ -74,8 +95,9 @@ Puppet::Type.type(:shard).provide(:ruby) do
       args = Array.new
       args << '--quiet'
       args << ['--host',host] if host
-      args << ['--eval',"printjson(#{command})"]
+      args << ['--eval', "printjson(#{command})"]
       output = mongo(args.flatten)
+      puts output
     rescue Puppet::ExecutionFailure => e
       if e =~ /Error: couldn't connect to server/ and wait <= 2**max_wait
         info("Waiting #{wait} seconds for mongod to become available")

@@ -10,7 +10,7 @@ fork = <%= @mongos_fork %>
 bind_ip=<%= @mongos_bind_ip %>
 <%- end -%>
 port = <%= @mongos_port %>
-configdb = <%= @mongos_configServers %>
+configdb = <%= @mongos_config_servers %>
 <%- @mongos_add_options.each do |addoption| -%>
 <%= addoption %>
 <%- end -%>

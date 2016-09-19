@@ -15,6 +15,7 @@ class mongodb::cleanup {
     '/run/systemd/generator.late/mongodb.service',
     '/var/log/mongodb/mongod.log',
     '/var/run/mongod.pid',
+    "/lib/systemd/system/mongod.service"
   ]:
     ensure => absent
   }

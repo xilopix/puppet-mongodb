@@ -22,8 +22,11 @@ Puppet::Type.newtype(:replicaset) do
     }
 
   newparam(:name, :namevar => true) do
-    newvalues(/^\w+$/)
-
+    validate do |value|
+      unless value =~ /^[\w\-\d]+/
+        raise ArgumentError, "%s should be a string" % value
+      end
+    end
   end
 
   newparam(:master_port) do

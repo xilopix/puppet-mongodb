@@ -10,7 +10,7 @@ Puppet::Type.type(:replicaset).provide(:ruby) do
   #
   def exists?
     debug = true
-    client_host = "#{Facter.value('fqdn')}:#{resource[:master_port]}"
+    client_host = "#{Facter.value('ipaddress')}:#{resource[:master_port]}"
 
     primary = mongo("#{client_host}", "--quiet", "--eval", "rs.isMaster().primary")
     hosts   = mongo("#{client_host}", "--quiet", "--eval", "rs.isMaster().hosts")
@@ -49,7 +49,7 @@ Puppet::Type.type(:replicaset).provide(:ruby) do
   def create
     debug = true
 
-    client_host = "#{Facter.value('fqdn')}:#{resource[:master_port]}"
+    client_host = "#{Facter.value('ipaddress')}:#{resource[:master_port]}"
     status = mongo("#{client_host}", "--quiet", "--eval", "rs.status().ok")
     replica_members = {}
 

@@ -31,6 +31,10 @@ class mongodb::params {
 
     $dbdir = '/var/lib'
 
+    # conf dir
+
+    $conf_dir = '/etc'
+
     # numbers of files (days) to keep by logrotate
 
     $logrotatenumber = 7
@@ -56,5 +60,12 @@ class mongodb::params {
     # specify pidfilepath
 
     $pidfilepath = $dbdir
+
+    # detector_timeout
+
+    $detector_timeout = 300
+
+    $created_file_path = '/var/lib'
+
 
 }

@@ -2,6 +2,7 @@
 #
 class mongodb (
   $dbdir                    = $mongodb::params::dbdir,
+  $conf_dir                 = $mongodb::params::conf_dir,
   $pidfilepath              = $mongodb::params::pidfilepath,
   $logdir                   = $mongodb::params::logdir,
   $logrotatenumber          = $mongodb::params::logrotatenumber,
@@ -14,17 +15,28 @@ class mongodb (
   $run_as_user              = $mongodb::params::run_as_user,
   $run_as_group             = $mongodb::params::run_as_group,
   $old_servicename          = $mongodb::params::old_servicename,
+  $detector_timeout         = $mongodb::params::detector_timeout,
+  $created_file_path        = $mongodb::params::created_file_path,
 
   ### START Hiera Lookups ###
+  $databases  = hiera_hash('mongodb::databases', {}),
+  $users      = hiera_hash('mongodb::users', {}),
+  $collection = hiera_hash('mongodb::collection', {}),
   $mongod     = hiera_hash('mongodb::mongod', {}),
   $mongos     = hiera_hash('mongodb::mongos', {}),
-  $replicaset = hiera_hash('mongodb::cluster::replicaset', {}),
-  $shard      = hiera_hash('mongodb::cluster::shard', {}),
+  $replicaset = hiera_hash('mongodb::replicaset', {}),
+  $shard      = hiera_hash('mongodb::shard', {}),
   ### END Hiera Lookups ###
 ) inherits mongodb::params {
 
   anchor { 'mongodb::begin': before => Anchor['mongodb::install::begin'], }
   anchor { 'mongodb::end': }
+
+  #
+  # allow ordering between resources in same defined resource mongodb::mongod
+  #
+  anchor { 'mongodb::mongod::begin': }
+  anchor { 'mongodb::mongod::end': }
 
   case $::osfamily {
     /(?i)(Debian|RedHat)/ : {
@@ -40,8 +52,9 @@ class mongodb (
     before  => Anchor['mongodb::end'],
   }
 
+  #
   # stop and disable default mongod
-
+  #
   service { $::mongodb::old_servicename:
     ensure     => stopped,
     enable     => false,
@@ -75,17 +88,27 @@ class mongodb (
 
   include mongodb::log
 
-  # handle resources for hiera
-
-  create_resources('mongodb::mongod', $mongod)
-  create_resources('mongodb::mongos', $mongos)
-  create_resources('mongodb::cluster::replicaset', $replicaset)
-  create_resources('mongodb::cluster::shard', $shard)
-
+  #
   # ordering resources application
+  #
+  Mongodb::Resources::Mongod <| |>
+  -> Mongodb::Resources::Mongos <| |>
+  -> Replicaset <| |>
+  -> Shard <| |>
 
-  Mongod<| |>
-  -> Mongos<| |>
-  -> Cluster::Replicaset<| |>
-  -> Cluster::Shard<| |>
+  #
+  # to avoid launching detector before mongod servers installation
+  #
+  Mongodb::Resources::Mongod<| |>
+  -> Start_detector<| |>
+
+  #
+  # handle resources for hiera
+  #
+  create_resources('mongodb::resources::mongod', $mongod)
+  create_resources('mongodb::resources::database', $databases)
+  create_resources('mongodb::resources::user', $users)
+  create_resources('mongodb::resources::mongos', $mongos)
+  create_resources('mongodb::resources::replicaset', $replicaset)
+  create_resources('mongodb::resources::shard', $shard)
 }

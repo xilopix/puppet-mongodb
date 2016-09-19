@@ -1,5 +1,5 @@
 # == definition mongodb::mongos
-define mongodb::mongos (
+define mongodb::resources::mongos (
   $mongos_configServers,
   $mongos_instance         = $name,
   $mongos_bind_ip          = '',
@@ -15,6 +15,9 @@ define mongodb::mongos (
 ) {
 
 # lint:ignore:selector_inside_resource  would not add much to readability
+
+
+  $mongos_config_servers = join($mongos_configServers, ",")
 
   file {
     "/etc/mongos_${mongos_instance}.conf":
@@ -52,7 +55,7 @@ define mongodb::mongos (
 
   start_detector { 'configservers':
     ensure  => present,
-    timeout => 300,
+    timeout => $mongodb::detector_timeout,
     servers => $mongos_configServers,
     policy  => all
   }
@@ -83,5 +86,4 @@ define mongodb::mongos (
       ]
     }
   }
-
 }

@@ -3,37 +3,44 @@
 
 ---
 storage:
-  dbPath: <%= scope.lookupvar('mongodb::dbdir') %>/mongod_<%= @mongod_instance %>
+  dbPath: <%= scope.lookupvar('mongodb::dbdir') %>/mongod_<%= @server %>
   journal:
     enabled: true
-  engine: <%= @mongod_engine %>
+  engine: <%= @engine %>
 
 processManagement:
-  fork: <%= @mongod_fork %>
-  pidFilePath: <%= scope.lookupvar('mongodb::pidfilepath') %>/mongod_<%= @mongod_instance %>/mongod.pid
+  fork: <%= @fork %>
+  pidFilePath: <%= scope.lookupvar('mongodb::pidfilepath') %>/mongod_<%= @server %>/mongod.pid
 
 systemLog:
   destination: file
-  logAppend: <%= @mongod_logappend %>
-  path: <%= scope.lookupvar('mongodb::logdir') %>/mongod_<%= @mongod_instance %>.log
+  logAppend: <%= @logappend %>
+  path: <%= scope.lookupvar('mongodb::logdir') %>/mongod_<%= @server %>.log
 
 net:
-  port: <%= @mongod_port %>
-  <%- if @mongod_bind_ip != "" -%>
-  bindIp: <%= @mongod_bind_ip %>
+  port: <%= @port %>
+  <%- if @bind_ip != "" -%>
+  bindIp: <%= @bind_ip %>
   <%- end -%>
-  <%- if @mongod_rest != false -%>
+  <%- if @rest != false -%>
   http:
-    enabled: <%= @mongod_rest %>
-    RESTInterfaceEnabled: <%= @mongod_rest %>
+    enabled: <%= @rest %>
+    RESTInterfaceEnabled: <%= @rest %>
   <%- end -%>
 
-<%- if @mongod_useauth != false or @mongod_auth != false -%>
+<%- if @useauth != false or @auth != false -%>
 security:
 <%- end -%>
-  <%- if @mongod_useauth != false -%>
-  keyFile: /etc/mongod_<%= @mongod_instance %>.key
+  <%- if @useauth != false -%>
+  keyFile: /etc/mongod_<%= @server %>.key
   <%- end -%>
-  <%- if @mongod_auth != false -%>
-  authorization: <%= @mongod_auth %>
+  <%- if @auth != false -%>
+  authorization: <%= @auth %>
+  <%- end -%>
+
+<%- if @replicaset != "" -%>
+replication:
+<%- end -%>
+  <%- if @replicaset != "" -%>
+  replSetName: <%= @replicaset %>
   <%- end -%>

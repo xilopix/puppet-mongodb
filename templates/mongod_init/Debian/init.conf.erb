@@ -21,7 +21,7 @@
 # Suite 330, Boston, MA 02111-1307 USA
 #
 ### BEGIN INIT INFO
-# Provides:          mongod_<%= @mongod_instance %>
+# Provides:          mongod_<%= @server %>
 # Required-Start:    $network $local_fs $remote_fs
 # Required-Stop:     $network $local_fs $remote_fs
 # Should-Start:      $named
@@ -51,18 +51,18 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 DAEMON=/usr/bin/mongod
 DESC=database
 
-NAME=mongodb_<%= @mongod_instance %>
+NAME=mongodb_<%= @server %>
 # Defaults.  Can be overridden by the /etc/default/$NAME
 # Other configuration options are located in $CONF file. See here for more:
 # http://docs.mongodb.org/manual/reference/configuration-options/
-CONF="/etc/mongod_<%= @mongod_instance %>.conf"
+CONF="/etc/mongod_<%= @server %>.conf"
 <%- if @template_type == 'yaml' -%>
 DBPATH=`awk -F: '/dbPath:/{print $2}' "$CONF"`
 <%- else -%>
 DBPATH=`awk -F= '/^dbpath=/{print $2}' "$CONF"`
 <%- end -%>
 
-PIDFILEPATH=<%= scope.lookupvar('mongodb::pidfilepath') %>/mongod_<%= @mongod_instance %>
+PIDFILEPATH=<%= scope.lookupvar('mongodb::pidfilepath') %>/mongod_<%= @server %>
 PIDFILE=$PIDFILEPATH/mongod.pid
 ENABLE_MONGODB=yes
 
@@ -131,7 +131,7 @@ start_server() {
   mkdir -p $PIDFILEPATH || exit 5
   chown -R ${DAEMONUSER}:${DAEMONGROUP} $PIDFILEPATH
 
-  <% if @mongod_deactivate_transparent_hugepage -%>
+  <% if @deactivate_transparent_hugepage -%>
   # implement mdiag.sh best-practice
   test -f /sys/kernel/mm/transparent_hugepage/khugepaged/defrag \
   && echo 0 > /sys/kernel/mm/transparent_hugepage/khugepaged/defrag
