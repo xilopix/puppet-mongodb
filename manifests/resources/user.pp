@@ -13,6 +13,7 @@
 #  tries (default: 10) - The maximum amount of two second tries to wait MongoDB startup.
 #
 define mongodb::resources::user (
+  $username      = false,
   $password      = false,
   $password_hash = false,
   $server        = '',
@@ -20,7 +21,17 @@ define mongodb::resources::user (
   $auth          = true,
   $roles         = ['dbAdmin'],
 ) {
-  $user = $name
+  if $username {
+    $user = $username
+  } else {
+    $user = $name
+  }
+
+  if $user == 'root' {
+    tag 'admin'
+  } else {
+    tag 'no_admin'
+  }
 
   if $password {
     $hash = mongodb_password($user, $password)
@@ -39,7 +50,7 @@ define mongodb::resources::user (
     password     => getparam(Mongodb::Resources::Mongod[$server], 'admin_password')
   }
 
-  mongodb_user { $name:
+  mongodb_user { $user:
     ensure        => present,
     password_hash => $hash,
     database      => $database,

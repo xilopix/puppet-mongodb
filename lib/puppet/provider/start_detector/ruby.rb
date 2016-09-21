@@ -41,7 +41,7 @@ Puppet::Type.type(:start_detector).provide(:ruby) do
           # avoid to re-test already detected servers
           next if servers_checked[server] == true
 
-          Puppet.debug("Searching connectivity for: #{ip}:#{port}") if debug
+          Puppet.debug("#{resource[:name]} Searching connectivity for: #{ip}:#{port}") if debug
 
           socket = TCPSocket.new(ip, port)
           socket.close

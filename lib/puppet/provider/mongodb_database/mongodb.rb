@@ -25,6 +25,9 @@ Puppet::Type.type(:mongodb_database).provide(:mongodb, :parent => Puppet::Provid
       #
       Puppet::Provider::Mongodb.class_variable_set(:@@configuration, resources[name][:client_hash])
 
+      #
+      # to avoid not master error for read operations
+      #
       dbs = instances
 
       if provider = dbs.find { |db| db.name == name }

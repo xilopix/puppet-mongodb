@@ -17,7 +17,6 @@ define mongodb::resources::database (
   $server  = false,
   $tries   = 10
 ) {
-
   if ! $db_name {
     $database_name = $name
   } else {

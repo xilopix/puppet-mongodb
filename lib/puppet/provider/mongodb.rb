@@ -194,8 +194,10 @@ class Puppet::Provider::Mongodb < Puppet::Provider
     retry_count.times do |n|
       begin
         if host
+          mongo_cmd(db, host, 'printjson(rs.slaveOk())')
           out = mongo_cmd(db, host, cmd)
         else
+          mongo_cmd(db, get_conn_string, 'printjson(rs.slaveOk())')
           out = mongo_cmd(db, get_conn_string, cmd)
         end
       rescue => e

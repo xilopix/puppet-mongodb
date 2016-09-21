@@ -86,27 +86,45 @@ class mongodb (
       value => $::mongodb::ulimit_nproc;
   }
 
-  include mongodb::log
+  #
+  # add virtual admin databases resources for mongod servers
+  #
+  $servers = keys($mongod)
+  mongodb::resources::database::admin { $servers: }
 
   #
-  # ordering resources application
+  # to ensure admin db and user are created before others
   #
-  Mongodb::Resources::Mongod <| |>
-  -> Mongodb::Resources::Mongos <| |>
-  -> Replicaset <| |>
-  -> Shard <| |>
+  Mongodb::Resources::Database::Admin <| |>
+  -> Mongodb::Resources::Database::Applicative <| |>
+
+  #
+  # ensure admin user is created after admin database
+  #
+  Mongodb::Resources::User <| tag == 'admin' |>
+  -> Mongodb::Resources::Database::Applicative <| |>
+  -> Mongodb::Resources::User <| tag == 'no_admin' |>
 
   #
   # to avoid launching detector before mongod servers installation
   #
-  Mongodb::Resources::Mongod<| |>
-  -> Start_detector<| |>
+  Mongodb::Resources::Mongod <| |>
+  -> Start_detector <| |>
+
+  #
+  # global orderings
+  #
+  Mongodb::Resources::Mongod <| |>
+  -> Mongodb::Resources::Replicaset <| |>
+  -> Mongodb::Resources::Database <| |>
+  -> Mongodb::Resources::Mongos <| |>
+  -> Mongodb::Resources::Shard <| |>
 
   #
   # handle resources for hiera
   #
   create_resources('mongodb::resources::mongod', $mongod)
-  create_resources('mongodb::resources::database', $databases)
+  create_resources('mongodb::resources::database::applicative', $databases)
   create_resources('mongodb::resources::user', $users)
   create_resources('mongodb::resources::mongos', $mongos)
   create_resources('mongodb::resources::replicaset', $replicaset)
