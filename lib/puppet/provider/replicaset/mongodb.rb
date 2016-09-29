@@ -2,7 +2,7 @@
 
 require 'json'
 
-Puppet::Type.type(:replicaset).provide(:ruby) do
+Puppet::Type.type(:replicaset).provide(:mongodb) do
   commands :mongo => '/usr/bin/mongo'
 
   #
@@ -10,7 +10,7 @@ Puppet::Type.type(:replicaset).provide(:ruby) do
   #
   def exists?
     debug = true
-    client_host = "#{Facter.value('ipaddress')}:#{resource[:master_port]}"
+    client_host = resource[:master]
 
     primary = mongo("#{client_host}", "--quiet", "--eval", "rs.isMaster().primary")
     hosts   = mongo("#{client_host}", "--quiet", "--eval", "rs.isMaster().hosts")
@@ -49,7 +49,7 @@ Puppet::Type.type(:replicaset).provide(:ruby) do
   def create
     debug = true
 
-    client_host = "#{Facter.value('ipaddress')}:#{resource[:master_port]}"
+    client_host = resource[:master]
     status = mongo("#{client_host}", "--quiet", "--eval", "rs.status().ok")
     replica_members = {}
 

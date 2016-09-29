@@ -12,12 +12,11 @@ Puppet::Type.newtype(:replicaset) do
     Example:
       replicaset { 'replica_name':
         ensure => present,
+        master => master1.example.com:24019,
         members => [
-          'master1.example.com:24019',
-          'slave1.example.com:24019',
-          'slave2.example.com:24019',
-        ],
-        router => router.example.com:24017
+          slave1.example.com:24019,
+          slave2.example.com:24019,
+        ]
       }
     }
 
@@ -29,8 +28,12 @@ Puppet::Type.newtype(:replicaset) do
     end
   end
 
-  newparam(:master_port) do
-    newvalues(/^\d+$/)
+  newparam(:master) do
+    validate do |value|
+      unless value =~ /[\w\-\.]+:\d+,*/
+        raise ArgumentError, "%s should respect pattern hostname:port" % value
+      end
+    end
   end
 
   newparam(:members, :array_matching => :all) do

@@ -1,32 +1,29 @@
 # == definition mongodb::cluster::replicaset
 define mongodb::resources::replicaset (
-  $replicaset_name        = $name,
-  $replicaset_master_port = undef,
-  $replicaset_slaves      = [],
+  $master = undef,
+  $slaves      = [],
 ) {
   # basic type validation
 
-  validate_numeric($replicaset_master_port)
-  validate_array($replicaset_slaves)
+  validate_array($slaves)
 
   # server set definition
 
-  $replicaset_master = "${::ipaddress}:${replicaset_master_port}"
-  $replica_server_set = flatten([$replicaset_master, $replicaset_slaves])
+  $replica_server_set = flatten([$master, $slaves])
 
   # wait for replication servers starting
 
-  start_detector { "${replicaset_name}_servers_detection":
+  start_detector { "${name}_servers_detection":
     ensure  => present,
     timeout => $mongodb::detector_timeout,
     servers => $replica_server_set,
     policy  => all
   }
 
-  replicaset { "$replicaset_name":
-    ensure      => present,
-    master_port => $replicaset_master_port,
-    members     => $replicaset_slaves,
-    require     => Start_detector["${replicaset_name}_servers_detection"]
+  replicaset { "$name":
+    ensure  => present,
+    master  => $master,
+    members => $slaves,
+    require => Start_detector["${name}_servers_detection"]
   }
 }
