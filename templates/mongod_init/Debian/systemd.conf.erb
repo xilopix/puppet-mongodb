@@ -5,7 +5,7 @@ After=network.target
 [Service]
 Type=forking
 PIDFile=<%= scope.lookupvar('mongodb::pidfilepath') %>/mongod_<%= @server %>/mongod.pid
-ExecStart=/usr/bin/mongod --config /etc/mongod_<%= @server %>.conf
+ExecStart=/usr/bin/mongod --config <%= scope.lookupvar('mongodb::conf_dir') %>/mongod_<%= @server %>.conf
 Restart=on-failure
 
 [Install]

@@ -32,18 +32,69 @@ define mongodb::resources::mongod (
     $template_type = 'ini'
   }
 
-  file { "/etc/mongod_${server}.conf":
+  $dbdir    = $::mongodb::dbdir
+  $logdir   = $::mongodb::logdir
+  $conf_dir = $::mongodb::conf_dir
+
+
+  #
+  # set db dir path
+  #
+  $db_dir_path = xi_get_file_directory_tree($dbdir)
+
+  ensure_resource('file', $db_dir_path, {
+    'ensure'  => directory,
+    'owner'   => $mongodb::params::run_as_user,
+    'group'   => $mongodb::params::run_as_group,
+    'before'  => Anchor['mongodb::mongod::end'],
+    'require' => Class['mongodb::install']
+  })
+
+  #
+  # set log dir path
+  #
+  $logdir_path = xi_get_file_directory_tree($logdir)
+
+  ensure_resource('file', $logdir_path, {
+    'ensure'  => directory,
+    'owner'   => $mongodb::params::run_as_user,
+    'group'   => $mongodb::params::run_as_group,
+    'before'  => Anchor['mongodb::mongod::end'],
+    'require' => Class['mongodb::install']
+  })
+
+  #
+  # set conf dir path
+  #
+  $conf_dir_path = xi_get_file_directory_tree($conf_dir)
+
+  ensure_resource('file', $conf_dir_path, {
+    'ensure'  => directory,
+    'owner'   => $mongodb::params::run_as_user,
+    'group'   => $mongodb::params::run_as_group,
+    'before'  => Anchor['mongodb::mongod::end'],
+    'require' => Class['mongodb::install']
+  })
+
+  file { "${::mongodb::conf_dir}/mongod_${server}.conf":
     content => template("mongodb/mongod_conf/$template_type.conf.erb"),
     mode    => '0755',
     before  => Anchor['mongodb::mongod::end'],
     require => Class['mongodb::install'];
   }
 
+  file { "${::mongodb::pidfilepath}/mongod_${server}":
+    ensure  => directory,
+    mode    => '0755',
+    before  => Anchor['mongodb::mongod::end'],
+    require => Class['mongodb::install'];
+  }
+
   exec { "copy_${server}_conf_to_yaml":
-    command => "cp /etc/mongod_${server}.conf /tmp/mongod_${server}.yaml",
+    command => "cp ${::mongodb::conf_dir}/mongod_${server}.conf /tmp/mongod_${server}.yaml",
     path    => ['/bin'],
     before  => Anchor['mongodb::mongod::end'],
-    require => [File["/etc/mongod_${server}.conf"]]
+    require => [File["${::mongodb::conf_dir}/mongod_${server}.conf"]]
   }
 
   set_configuration { "configure_mongod_${server}":
@@ -52,13 +103,13 @@ define mongodb::resources::mongod (
     configure => { replace => $configuration },
     before  => Anchor['mongodb::mongod::end'],
     require   => [
-      File["/etc/mongod_${server}.conf"],
+      File["${::mongodb::conf_dir}/mongod_${server}.conf"],
       Exec["copy_${server}_conf_to_yaml"]
     ]
   }
 
   exec { "copy_${server}_conf_to_conf":
-    command => "cp /tmp/mongod_${server}.yaml /etc/mongod_${server}.conf",
+    command => "cp /tmp/mongod_${server}.yaml ${::mongodb::conf_dir}/mongod_${server}.conf",
     path    => ['/bin'],
     before  => Anchor['mongodb::mongod::end'],
     require => [Set_configuration["configure_mongod_${server}"]]
@@ -76,7 +127,7 @@ define mongodb::resources::mongod (
         ],
         require => [
           Class['mongodb::install'],
-          File["/etc/mongod_${server}.conf"]
+          File["${::mongodb::conf_dir}/mongod_${server}.conf"]
       ];
     }
   } else {
@@ -131,8 +182,8 @@ define mongodb::resources::mongod (
   }
 
   file {[
-    "/var/run/mongod_${server}",
     "${::mongodb::dbdir}/mongod_${server}",
+    "/var/run/mongod_${server}"
   ]:
     ensure  => directory,
     owner   => $mongodb::params::run_as_user,
@@ -151,7 +202,7 @@ define mongodb::resources::mongod (
     hasrestart => true,
     provider   => $::mongod_service_provider,
     require    => [File[
-        "/etc/mongod_${server}.conf",
+        "${::mongodb::conf_dir}/mongod_${server}.conf",
         "${init_file_path}"
       ],
       Service[$::mongodb::old_servicename]
