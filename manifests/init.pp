@@ -129,4 +129,9 @@ class mongodb (
   create_resources('mongodb::resources::mongos', $mongos)
   create_resources('mongodb::resources::replicaset', $replicaset)
   create_resources('mongodb::resources::shard', $shard)
+
+  #
+  # Clean default mongod installation
+  #
+  include mongodb::cleanup
 }

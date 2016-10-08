@@ -32,10 +32,13 @@ define mongodb::resources::mongod (
     $template_type = 'ini'
   }
 
-  $dbdir    = $::mongodb::dbdir
-  $logdir   = $::mongodb::logdir
-  $conf_dir = $::mongodb::conf_dir
-
+  #
+  # shortcut for init variables 
+  #
+  $dbdir       = $::mongodb::dbdir
+  $logdir      = $::mongodb::logdir
+  $conf_dir    = $::mongodb::conf_dir
+  $pidfile_dir = $::mongodb::pidfilepath
 
   #
   # set db dir path
@@ -49,6 +52,12 @@ define mongodb::resources::mongod (
     'before'  => Anchor['mongodb::mongod::end'],
     'require' => Class['mongodb::install']
   })
+
+  file { "${dbdir}/mongod_${server}":
+    ensure  => directory,
+    mode    => '0755',
+    require => [File["${dbdir}"]]
+  }
 
   #
   # set log dir path
@@ -76,6 +85,19 @@ define mongodb::resources::mongod (
     'require' => Class['mongodb::install']
   })
 
+  #
+  # set pidfile dir path
+  #
+  $pidfile_dir_path = xi_get_file_directory_tree($pidfile_dir)
+
+  ensure_resource('file', $pidfile_dir_path, {
+    'ensure'  => directory,
+    'owner'   => $mongodb::params::run_as_user,
+    'group'   => $mongodb::params::run_as_group,
+    'before'  => Anchor['mongodb::mongod::end'],
+    'require' => Class['mongodb::install']
+  })
+
   file { "${::mongodb::conf_dir}/mongod_${server}.conf":
     content => template("mongodb/mongod_conf/$template_type.conf.erb"),
     mode    => '0755',
@@ -91,10 +113,10 @@ define mongodb::resources::mongod (
   }
 
   exec { "copy_${server}_conf_to_yaml":
-    command => "cp ${::mongodb::conf_dir}/mongod_${server}.conf /tmp/mongod_${server}.yaml",
+    command => "cp ${conf_dir}/mongod_${server}.conf /tmp/mongod_${server}.yaml",
     path    => ['/bin'],
     before  => Anchor['mongodb::mongod::end'],
-    require => [File["${::mongodb::conf_dir}/mongod_${server}.conf"]]
+    require => [File["${conf_dir}/mongod_${server}.conf"]]
   }
 
   set_configuration { "configure_mongod_${server}":
@@ -179,20 +201,6 @@ define mongodb::resources::mongod (
       require => Class['mongodb::install'],
       notify  => Service["mongod_${server}"],
     }
-  }
-
-  file {[
-    "${::mongodb::dbdir}/mongod_${server}",
-    "/var/run/mongod_${server}"
-  ]:
-    ensure  => directory,
-    owner   => $mongodb::params::run_as_user,
-    group   => $mongodb::params::run_as_group,
-    before  => [
-      Service["mongod_${server}"],
-      Anchor['mongodb::mongod::end']
-    ],
-    require => Class['install']
   }
 
   service { "mongod_${server}":
