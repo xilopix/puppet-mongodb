@@ -33,7 +33,7 @@ define mongodb::resources::mongod (
   }
 
   #
-  # shortcut for init variables 
+  # shortcut for init variables
   #
   $dbdir       = $::mongodb::dbdir
   $logdir      = $::mongodb::logdir
@@ -43,7 +43,7 @@ define mongodb::resources::mongod (
   #
   # set db dir path
   #
-  $db_dir_path = xi_get_file_directory_tree($dbdir)
+  $db_dir_path = xi_get_file_directory_tree($dbdir, 1)
 
   ensure_resource('file', $db_dir_path, {
     'ensure'  => directory,
@@ -62,7 +62,7 @@ define mongodb::resources::mongod (
   #
   # set log dir path
   #
-  $logdir_path = xi_get_file_directory_tree($logdir)
+  $logdir_path = xi_get_file_directory_tree($logdir, 1)
 
   ensure_resource('file', $logdir_path, {
     'ensure'  => directory,
@@ -75,7 +75,7 @@ define mongodb::resources::mongod (
   #
   # set conf dir path
   #
-  $conf_dir_path = xi_get_file_directory_tree($conf_dir)
+  $conf_dir_path = xi_get_file_directory_tree($conf_dir, 1)
 
   ensure_resource('file', $conf_dir_path, {
     'ensure'  => directory,
@@ -88,7 +88,7 @@ define mongodb::resources::mongod (
   #
   # set pidfile dir path
   #
-  $pidfile_dir_path = xi_get_file_directory_tree($pidfile_dir)
+  $pidfile_dir_path = xi_get_file_directory_tree($pidfile_dir, 1)
 
   ensure_resource('file', $pidfile_dir_path, {
     'ensure'  => directory,
