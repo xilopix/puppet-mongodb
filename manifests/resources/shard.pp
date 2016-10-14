@@ -10,26 +10,26 @@ define mongodb::resources::shard (
 
   # wait for replica servers starting
 
-  start_detector { "${shard_name}_servers_detection":
+  start_detector { "${name}_servers_detection":
     ensure  => present,
     timeout => $mongodb::detector_timeout,
     servers => $nodes,
     policy  => all
   }
 
-  start_detector { "${shard_name}_router_detection":
+  start_detector { "${name}_router_detection":
     ensure  => present,
     timeout => $mongodb::detector_timeout,
     servers => $router,
     policy  => all,
-    require => Start_detector["${shard_name}_servers_detection"]
+    require => Start_detector["${name}_servers_detection"]
   }
 
-  shard { "${shard_name}_setup":
+  shard { "${name}_setup":
     ensure     => present,
     replicaset => $replicaset,
     router     => $router,
     nodes      => $nodes,
-    require => Start_detector["${shard_name}_router_detection"]
+    require => Start_detector["${name}_router_detection"]
   }
 }
