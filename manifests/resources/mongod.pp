@@ -24,7 +24,13 @@ define mongodb::resources::mongod (
   $databases                       = {}
 ) {
 
-# lint:ignore:selector_inside_resource  would not add much to readability
+  #
+  # various paths
+  #
+  $dbdir       = $::mongodb::dbdir
+  $logdir      = $::mongodb::logdir
+  $conf_dir    = $::mongodb::conf_dir
+  $pidfile_dir = $::mongodb::pidfilepath
 
   if (versioncmp($mongodb::package_ensure, '3.0.0') >= 0) {
     $template_type = 'yaml'
@@ -32,71 +38,16 @@ define mongodb::resources::mongod (
     $template_type = 'ini'
   }
 
-  #
-  # shortcut for init variables
-  #
-  $dbdir       = $::mongodb::dbdir
-  $logdir      = $::mongodb::logdir
-  $conf_dir    = $::mongodb::conf_dir
-  $pidfile_dir = $::mongodb::pidfilepath
-
-  #
-  # set db dir path
-  #
-  $db_dir_path = xi_get_file_directory_tree($dbdir, 1)
-
-  ensure_resource('file', $db_dir_path, {
-    'ensure'  => directory,
-    'owner'   => $mongodb::params::run_as_user,
-    'group'   => $mongodb::params::run_as_group,
-    'before'  => Anchor['mongodb::mongod::end'],
-    'require' => Class['mongodb::install']
-  })
+  File {
+    owner   => $::mongodb::run_as_user,
+    group   => $::mongodb::run_as_group,
+  }
 
   file { "${dbdir}/mongod_${server}":
     ensure  => directory,
     mode    => '0755',
     require => [File["${dbdir}"]]
   }
-
-  #
-  # set log dir path
-  #
-  $logdir_path = xi_get_file_directory_tree($logdir, 1)
-
-  ensure_resource('file', $logdir_path, {
-    'ensure'  => directory,
-    'owner'   => $mongodb::params::run_as_user,
-    'group'   => $mongodb::params::run_as_group,
-    'before'  => Anchor['mongodb::mongod::end'],
-    'require' => Class['mongodb::install']
-  })
-
-  #
-  # set conf dir path
-  #
-  $conf_dir_path = xi_get_file_directory_tree($conf_dir, 1)
-
-  ensure_resource('file', $conf_dir_path, {
-    'ensure'  => directory,
-    'owner'   => $mongodb::params::run_as_user,
-    'group'   => $mongodb::params::run_as_group,
-    'before'  => Anchor['mongodb::mongod::end'],
-    'require' => Class['mongodb::install']
-  })
-
-  #
-  # set pidfile dir path
-  #
-  $pidfile_dir_path = xi_get_file_directory_tree($pidfile_dir, 1)
-
-  ensure_resource('file', $pidfile_dir_path, {
-    'ensure'  => directory,
-    'owner'   => $mongodb::params::run_as_user,
-    'group'   => $mongodb::params::run_as_group,
-    'before'  => Anchor['mongodb::mongod::end'],
-    'require' => Class['mongodb::install']
-  })
 
   file { "${::mongodb::conf_dir}/mongod_${server}.conf":
     content => template("mongodb/mongod_conf/$template_type.conf.erb"),

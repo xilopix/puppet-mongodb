@@ -29,8 +29,6 @@ class mongodb (
   ### END Hiera Lookups ###
 ) inherits mongodb::params {
 
-
-
   anchor { 'mongodb::begin': before => Anchor['mongodb::install::begin'], }
   anchor { 'mongodb::end': }
 
@@ -39,6 +37,12 @@ class mongodb (
   #
   anchor { 'mongodb::mongod::begin': }
   anchor { 'mongodb::mongod::end': }
+
+  #
+  # allow ordering between resources in same defined resource mongodb::mongos
+  #
+  anchor { 'mongodb::mongos::begin': }
+  anchor { 'mongodb::mongos::end': }
 
   case $::osfamily {
     /(?i)(Debian|RedHat)/ : {
@@ -126,4 +130,11 @@ class mongodb (
   # Clean default mongod installation
   #
   include mongodb::cleanup
+
+  #
+  # Create paths for servers
+  #
+  class { 'mongodb::path':
+
+  }
 }

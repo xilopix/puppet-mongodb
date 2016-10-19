@@ -17,6 +17,24 @@ class mongodb::cleanup {
     '/var/run/mongod.pid',
     "/lib/systemd/system/mongod.service"
   ]:
-    ensure => absent
+    ensure  => absent,
+    require => [
+      Exec['Remove mongod by systemctl'],
+      Exec['Reset units by systemctl']
+    ]
+  }
+
+  exec { 'Remove mongod by systemctl':
+    command => 'systemctl disable mongod.service',
+    path    => ['/bin']
+  }
+
+  exec { 'Reset units by systemctl':
+    command => 'systemctl reset-failed',
+    path    => ['/bin'],
+    require => [
+      Service['mongod'],
+      Exec['Remove mongod by systemctl']
+    ]
   }
 }
