@@ -29,6 +29,8 @@ class mongodb (
   ### END Hiera Lookups ###
 ) inherits mongodb::params {
 
+
+
   anchor { 'mongodb::begin': before => Anchor['mongodb::install::begin'], }
   anchor { 'mongodb::end': }
 
@@ -93,22 +95,12 @@ class mongodb (
   mongodb::resources::database::admin { $servers: }
 
   #
-  # to ensure admin db and user are created before others
-  #
-  Mongodb::Resources::Database::Admin <| |>
-  -> Mongodb::Resources::Database::Applicative <| |>
-
-  #
-  # ensure admin user is created after admin database
-  #
-  Mongodb::Resources::User <| tag == 'admin' |>
-  -> Mongodb::Resources::Database::Applicative <| |>
-  -> Mongodb::Resources::User <| tag == 'no_admin' |>
-
-  #
   # to avoid launching detector before mongod servers installation
   #
   Mongodb::Resources::Mongod <| |>
+  -> Start_detector <| |>
+
+  Mongodb::Resources::Database::Admin <| |>
   -> Start_detector <| |>
 
   #
@@ -124,7 +116,7 @@ class mongodb (
   # handle resources for hiera
   #
   create_resources('mongodb::resources::mongod', $mongod)
-  create_resources('mongodb::resources::database::applicative', $databases)
+  create_resources('mongodb::resources::database::admin', $databases)
   create_resources('mongodb::resources::user', $users)
   create_resources('mongodb::resources::mongos', $mongos)
   create_resources('mongodb::resources::replicaset', $replicaset)
