@@ -1,0 +1,1 @@
+ssh vagrant@10.5.100.241 ruby /srv/puppet/test/puppet/modules-ext/mongodb/lib/puppet/provider/shard/dev.rb

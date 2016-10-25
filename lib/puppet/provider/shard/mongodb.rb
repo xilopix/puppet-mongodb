@@ -15,22 +15,40 @@ Puppet::Type.type(:shard).provide(:mongodb) do
         return false
       end
 
-      match = /([^\/].+)\/(.+)/.match(output['shards'][i]['host'])
-      replica = output['shards'][i]['_id']
+      shard_host = output['shards'][i]['host']
+      shard_id   = output['shards'][i]['_id']
 
-      nodes = $2.split(",")
+      /([^\/].+)\/?(.+)/.match(shard_host)
 
-      if replica.eql? resource[:replicaset]
-        if nodes.sort != resource[:nodes].sort
-          Puppet.warning("custom-debug - Missing nodes into the shard, please add them manually")
+      if is_replica(shard_host)
+        nodes = $2.split(",")
+
+        if shard_id.eql? resource[:replicaset]
+          if nodes.sort != resource[:nodes].sort
+            Puppet.warning("custom-debug - Missing nodes into the shard, please add them manually")
+          end
+          Puppet.debug("custom-debug - The shard already exists") if debug == true
+          return true
+          break
         end
-        Puppet.debug("custom-debug - The shard already exists") if debug == true
-        return true
-        break
+      else
+        single_node = shard_host
+        if single_node == resource[:nodes]
+          return true
+          break
+        end
       end
     end
 
     false
+  end
+
+  #
+  #
+  #
+  def is_replica(host)
+    is_replica = /\//.match(host)
+    is_replica
   end
 
   #
@@ -46,20 +64,37 @@ Puppet::Type.type(:shard).provide(:mongodb) do
   def create
     begin
       count = 3
+      nodes = resource[:nodes]
 
-      nodes_str = resource[:nodes].join(",")
-      command = "sh.addShard(\"#{resource[:replicaset]}/#{nodes_str}\")"
+      if (nodes.is_a? Array) && (nodes.length > 1)
+        nodes_str = nodes.join(",")
+      else
+        nodes_str = nodes
+      end
+
+      if resource[:replicaset].nil?
+        command = "sh.addShard(\"#{nodes_str}\")"
+      else
+        command = "sh.addShard(\"#{resource[:replicaset]}/#{nodes_str}\")"
+      end
+
       result = mongo_command(command, "#{resource[:router]}")
 
-      shard_not_added = ((!result['shardAdded'].eql? resource[:replicaset]) or (result['ok'] != 1))
+      if resource[:replicaset].nil?
+        shard_not_added = (result['ok'] != 1)
+      else
+        shard_not_added = ((!result['shardAdded'].eql? resource[:replicaset]) or (result['ok'] != 1))
+      end
 
       while (shard_not_added and (count > 0))
         count = (count - 1)
-
-        nodes_str = resource[:nodes].join(",")
-        command = "sh.addShard(\"#{resource[:replicaset]}/#{nodes_str}\")"
         result = mongo_command(command, "#{resource[:router]}")
-        shard_not_added = ((!result['shardAdded'].eql? resource[:replicaset]) or (result['ok'] != 1))
+
+        if resource[:replicaset].nil?
+          shard_not_added = (result['ok'] != 1)
+        else
+          shard_not_added = ((!result['shardAdded'].eql? resource[:replicaset]) or (result['ok'] != 1))
+        end
 
         sleep 5
 

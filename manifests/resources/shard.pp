@@ -14,7 +14,8 @@ define mongodb::resources::shard (
     ensure  => present,
     timeout => $mongodb::detector_timeout,
     servers => $nodes,
-    policy  => all
+    policy  => all,
+    tag     => ['development_shard']
   }
 
   start_detector { "${name}_router_detection":
@@ -22,7 +23,8 @@ define mongodb::resources::shard (
     timeout => $mongodb::detector_timeout,
     servers => $router,
     policy  => all,
-    require => Start_detector["${name}_servers_detection"]
+    require => Start_detector["${name}_servers_detection"],
+    tag     => ['development_shard']
   }
 
   shard { "${name}_setup":
@@ -30,6 +32,7 @@ define mongodb::resources::shard (
     replicaset => $replicaset,
     router     => $router,
     nodes      => $nodes,
-    require => Start_detector["${name}_router_detection"]
+    require    => Start_detector["${name}_router_detection"],
+    tag        => ['development_shard']
   }
 }

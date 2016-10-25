@@ -17,13 +17,15 @@ define mongodb::resources::replicaset (
     ensure  => present,
     timeout => $mongodb::detector_timeout,
     servers => $replica_server_set,
-    policy  => all
+    policy  => all,
+    tag     => ['development_replicaset']
   }
 
   replicaset { "$name":
     ensure  => present,
     master  => $master,
     members => $slaves,
-    require => Start_detector["${name}_servers_detection"]
+    require => Start_detector["${name}_servers_detection"],
+    tag     => ['development_replicaset']
   }
 }
