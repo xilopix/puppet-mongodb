@@ -10,6 +10,16 @@ Type=forking
 PIDFile=<%= scope.lookupvar('mongodb::pidfilepath') %>/mongos_<%= @server %>/mongos.pid
 ExecStart=/usr/bin/mongos --config <%= scope.lookupvar('mongodb::conf_dir') %>/mongos_<%= @server %>.conf
 Restart=on-failure
+# (file size)
+LimitFSIZE=infinity
+# (cpu time)
+LimitCPU=infinity
+# (virtual memory size)
+LimitAS=infinity
+# (open files)
+LimitNOFILE=64000
+# (processes/threads)
+LimitNPROC=64000
 
 [Install]
 WantedBy=multi-user.target

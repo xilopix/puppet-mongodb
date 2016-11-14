@@ -7,6 +7,16 @@ Type=forking
 PIDFile=<%= scope.lookupvar('mongodb::pidfilepath') %>/mongod_<%= @server %>/mongod.pid
 ExecStart=/usr/bin/mongod --config <%= scope.lookupvar('mongodb::conf_dir') %>/mongod_<%= @server %>.conf
 Restart=on-failure
+# (file size)
+LimitFSIZE=infinity
+# (cpu time)
+LimitCPU=infinity
+# (virtual memory size)
+LimitAS=infinity
+# (open files)
+LimitNOFILE=64000
+# (processes/threads)
+LimitNPROC=64000
 
 [Install]
 WantedBy=multi-user.target
