@@ -82,7 +82,7 @@ Puppet::Type.type(:replicaset).provide(:mongodb) do
 
     if resource[:members].is_a? Array
       resource[:members].each do |member|
-        self.add_member_to_replicaset(replica_members, resource[:members])
+        self.add_member_to_replicaset(replica_members, member)
       end
     else
       self.add_member_to_replicaset(replica_members, resource[:members])
